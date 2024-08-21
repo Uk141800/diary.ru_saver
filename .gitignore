@@ -1,0 +1,9 @@
+# exclude everything
+venv/*
+.idea/*
+diary.ru.json
+# Игнорируем все папки
+*/
+
+# Исключаем папку Template
+!Template/

@@ -1,0 +1,62 @@
+/*#-id .-class*/
+#diary_name{
+    background-color: #ccc;
+    text-align: center;
+    font-size: larger;
+    font-weight: 800;
+    padding: 20px 0px;
+    margin: 5px;
+}
+.year{
+background-color: #ccc;
+}
+#menu{
+	background-color: #ddd;
+}
+#menu li{
+    padding: 0;
+    margin: 0 0 1px 0;
+    list-style: none;
+	background-color: #ddd;
+}
+#menu ul{
+    padding: 0;
+    margin: 0 0 15px 0;
+	background-color: #ddd;
+}
+
+.hidden{
+	display:none;
+}
+body{
+	background-color: #eee;
+}
+#menu {
+ float: left;
+    width: 24%;
+	height: 100%
+	
+    }
+#posts {
+    float: right;
+    width: 75%;
+    }
+.post {
+	background-color: #ddd;
+	margin-bottom: 10px;
+    }
+.title {
+	font-weight: bold;
+    }
+
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+    }
+.header{
+    font-weight: bold;
+    }
+a{
+    color:#00F;
+}
