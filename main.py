@@ -14,14 +14,12 @@ limit = 0
 def make_user(link):
     """
     Создание папки с пользователем. Название папки - домен пользователя из меременной link.
-    Внутрь сразу кладутся файл index с основной информацией, scripts.js с кодом, который раскрывает море
-    и style.css для красоты.
+    Внутрь сразу кладутся файл index с основной информацией и style.css для красоты.
     """
     if os.path.exists(link): #Удаляем папку, если она была.
         shutil.rmtree(link)
     os.makedirs(link)
     shutil.copyfile('template/page.html', f'{link}/index.html')
-    shutil.copyfile('template/scripts.js', f'{link}/script.js')
     shutil.copyfile('template/style.css', f'{link}/style.css')
 
 months = {
