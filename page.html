@@ -1,0 +1,101 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+<script type="text/javascript" src="script.js"></script>
+<script>
+function interceptClickEvent(e) {
+	var href;
+	var target = e.target || e.srcElement;
+	if ((target.tagName === 'A') && (target.class="LinkMore")) {
+		href = target.getAttribute('href');
+		target.style.display = 'none';
+		document.getElementById(target.getAttribute('id').substring(4)).style.display = 'inline';
+		if (true) {
+		   //tell the browser not to respond to the link click
+		   e.preventDefault();
+		}
+	}
+}
+
+
+//listen for link click events at the document level
+if (document.addEventListener) {
+	document.addEventListener('click', interceptClickEvent);
+} else if (document.attachEvent) {
+	document.attachEvent('onclick', interceptClickEvent);
+}
+</script>
+<style>
+/*#-id .-class*/
+#diary_name{
+    background-color: #ccc;
+    text-align: center;
+    font-size: larger;
+    font-weight: 800;
+    padding: 20px 0px;
+    margin: 5px;
+}
+.year{
+background-color: #ccc;
+}
+#menu{
+	background-color: #ddd;
+}
+#menu li{
+    padding: 0;
+    margin: 0 0 1px 0;
+    list-style: none;
+	background-color: #ddd;
+}
+#menu ul{
+    padding: 0;
+    margin: 0 0 15px 0;
+	background-color: #ddd;
+}
+
+.hidden{
+	display:none;
+}
+body{
+	background-color: #eee;
+}
+#menu {
+ float: left;
+    width: 24%;
+	height: 100%
+	
+    }
+#posts {
+    float: right;
+    width: 75%;
+    }
+.post {
+	background-color: #ddd;
+	margin-bottom: 10px;
+    }
+.title {
+	font-weight: bold;
+    }
+
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+    }
+.header{
+    font-weight: bold;
+    }
+a{
+    color:#00F;
+}
+</style>
+</head>
+<body>
+	<div id='diary_name'></div>
+		<div class="row">
+			<div id="menu"></div>
+			<div id="posts"><div class='hidden'></div>
+        </div>
+    </div>
+</body>
+</html>
