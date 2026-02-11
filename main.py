@@ -102,7 +102,6 @@ def save_post(link, y, m, d, time, title, text, tags, url=''):
     temp = temp.replace("<div class='hidden'></div>", f"{new_text}<div class='hidden'></div>")
     with open(f'{link}/{y}-{m}.html', 'w', encoding="utf-8") as page_post:
         page_post.write(temp)
-    sleep(1)
 
 
 def main():
@@ -135,23 +134,42 @@ def main():
     headers = {
         'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36'}
 
+
+    print(
+'''Перейдите в свой дневник на сайте и скопируйте ссылку на свой дневник.
+Должно быть что-то вроде https://906.diary.ru/, https://906.diary.space/ или https://906.diarybackup.space/
+В зависимости от того, какой домен будет введен - с такой версии сайта и будет тянуться архив.''')
     link = input(
         f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\tВставьте ссылку вроде такой: https://906.diary.ru/ или пустое поле для https://906.diary.ru/\n")
     link = 'https://906.diary.ru/' if len(link) == 0 else link
 
-    # убираем протокол, если он есть. Должна остаться ссылка формата домен.diary.ru
-    # todo сделать регуляркой
-    if link.startswith('https://'):
-        link = link[8:]
-    if link.startswith('http://'):
-        link = link[7:]
-    if link.endswith('.diary.ru/'):
-        link = link[0:len(link) - 10]
-    if link.endswith('.diary.ru'):
-        link = link[0:len(link) - 9]
+    pattern = re.compile(
+        r'^(?:https?://)?'  # необязательный протокол
+        r'(?P<user>[a-zA-Z0-9_-]+)\.'  # личный домен
+        r'(?P<domain>diary(?:backup)?\.(?:ru|space))',  # домен ресурса
+        re.IGNORECASE
+    )
+    match = pattern.search(link)
+
+    if not match:
+        print('Ссылка не корректная. Пожалуйста, прочитайте еще раз и введите правильную')
+        main()
+        exit()
+
+    link = match.group('user')
+    diary_domain = match.group('domain')
+
+
 
     # Проверка файла с куками
-    response = requests.get(f'http://{link}.diary.ru/?calendar', cookies=cookies, headers=headers)
+    try:
+        response = requests.get(f'http://{link}.{diary_domain}/?calendar', cookies=cookies, headers=headers)
+    except Exception as e:
+        print('Что-то пошло не так. Возможно нет подключения к интернет или сайт снова упал.')
+        print(e)
+        input()
+        exit()
+
     if 'Пожалуйста заполните поля для авторизации:' in response.text:
         input(
             f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\tЧто-то не так с файлом diary.ru.json. Пересоздайте его по инструкции https://github.com/Uk141800/diary.ru_saver")
@@ -167,11 +185,12 @@ def main():
     make_user(link)
 
     try:
-        response = requests.get(f'http://{link}.diary.ru/?calendar', cookies=cookies, headers=headers)
+        response = requests.get(f'http://{link}.{diary_domain}/?calendar', cookies=cookies, headers=headers)
     except Exception as e:
         print(
             f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\tЧто-то пошло не так. Возможно проблемы с сетью. Попробуйте позже.\nТекст ошибки:\n")
         input(e)
+        input()
         exit()
     page = BeautifulSoup(response.text, 'lxml')
 
@@ -209,23 +228,39 @@ def main():
 
     counter = 0
     for day_link in tqdm(days_link, colour="green", bar_format='{l_bar}{bar:40}{r_bar}{bar:-10b}'):
-        sleep(2)
+    #for day_link in days_link:
+        # if '2017' in day_link or '2018' in day_link or '2019' in day_link or '2021' in day_link:
+        #     continue
+        sleep(3)
         if counter > limit and limit > 0:
             break
         counter += 1
+        error_counter = 0
 
         y, m, d = day_link[day_link.find('date=') + 5:].split('-')
         while True:
             try:
-                response = requests.get(day_link + '&sort=created_at', cookies=cookies, headers=headers)
+               # print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} запрашиваю {day_link + '&sort=created_at'}")
+                response = requests.get(day_link + '&sort=created_at', cookies=cookies, headers=headers, timeout=30)
                 if str(response.status_code).startswith('2'):
+                #    print('ok')
+                    error_counter = 0
                     break
                 else:
-                    print(f"\r{response.status_code}", end='')
+                    print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {response.status_code}")
+                    sleep(10)
                     continue
-            except:
-                sleep(5)
+            except Exception as e:
+                error_counter += 1
+                if error_counter > 5:
+                    print(f'\rПришлось пропустить страницу {day_link}. Сервер не вернул данных по этому адресу')
+                    error_counter = 0
+                    break
+                # print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {response.status_code}")
+                sleep(6)
                 continue
+        if error_counter > 5:
+            continue
         page = BeautifulSoup(response.text, 'lxml')
         current_day_posts = page.findAll(True, {"class": ["singlePost countFirst", "singlePost countSecond"]})
         for post in current_day_posts:
@@ -261,7 +296,7 @@ def main():
             post_text = post_text.replace('\n', '')
             post_text = post_text.replace('<em>', '')
             post_text = post_text.replace('</em>', '')
-            post_text = post_text.replace('<a href="/', f'<a href="http://{link}.diary.ru/')
+            post_text = post_text.replace('<a href="/', f'<a href="http://{link}.{diary_domain}/')
 
             # убираем р с тегами
             attag = re.search(r'<p class="tags atTag">.*?</p>', post_text, flags=re.DOTALL)
@@ -319,7 +354,7 @@ def main():
     with open(f'{link}/index.html', 'r', encoding="utf-8") as page_pre:
         temp = page_pre.read()
     temp = temp.replace("<div class='hidden'>",
-                        f'<h3>Diary.ru saver</h3><p>Версия сохранятора от 2024-08-20</p><p>Архив создан: {datetime.now()}</p>')
+                        f'<h3>Diary.ru saver</h3><p>Версия сохранятора от 2026-02-11</p><p>Архив создан: {datetime.now()}</p>')
     with open(f'{link}/index.html', 'w', encoding="utf-8") as page_post:
         page_post.write(temp)
     input(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\tГотово")
